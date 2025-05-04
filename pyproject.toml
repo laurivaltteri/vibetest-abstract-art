@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "abstract-art-generator"
+version = "0.2.0"
+description = "Generate abstract art images by drawing random shapes"
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+Pillow = "^8.0"
+typer = "^0.7.0"
+
+[tool.poetry.scripts]
+art-gen = "abstract_art_generator.cli:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
