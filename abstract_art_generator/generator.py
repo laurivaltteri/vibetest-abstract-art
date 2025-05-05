@@ -2,6 +2,7 @@ import random
 import math
 from PIL import Image, ImageDraw, ImageChops
 from .colors import PALETTES, parse_hex_color
+import colorsys
 
 def apply_gradient(width, height, color1, color2):
     base = Image.new('RGB', (width, height), color=0)
@@ -40,6 +41,37 @@ def draw_fractal_tree(draw, x1, y1, length, angle, depth, branch_angle, scale, w
     draw_fractal_tree(draw, x2, y2, new_length, angle - branch_angle, depth - 1, branch_angle, scale, width, color)
     draw_fractal_tree(draw, x2, y2, new_length, angle + branch_angle, depth - 1, branch_angle, scale, width, color)
 
+# --- Artistic Mandelbrot Drawing ---
+def draw_mandelbrot(width, height, max_iter=200, zoom=1.0, center=(-0.7,0.0), color_offset=0.0):
+    img = Image.new('RGB', (width, height))
+    pix = img.load()
+    scale = 1.5 / zoom
+    re_start = center[0] - scale
+    re_end = center[0] + scale
+    im_start = center[1] - scale * height / width
+    im_end = center[1] + scale * height / width
+    for x in range(width):
+        for y in range(height):
+            re = re_start + (x / (width - 1)) * (re_end - re_start)
+            im = im_start + (y / (height - 1)) * (im_end - im_start)
+            c = complex(re, im)
+            z = 0
+            it = 0
+            while abs(z) <= 2 and it < max_iter:
+                z = z * z + c
+                it += 1
+            if it == max_iter:
+                color = (0, 0, 0)
+            else:
+                mu = it - math.log2(math.log(abs(z) + 1e-10)) + color_offset
+                hue = (0.8 * mu / max_iter + color_offset) % 1.0
+                sat = 1.0
+                val = 1.0 if it < max_iter else 0
+                r, g, b = [int(255 * v) for v in colorsys.hsv_to_rgb(hue, sat, val)]
+                color = (r, g, b)
+            pix[x, y] = color
+    return img
+
 def generate_art(
     width=800,
     height=600,
@@ -69,8 +101,22 @@ def generate_art(
     fractal_scale=0.7,
     fractal_width=1,
     fractal_color=(0, 0, 0, 255),
+    mandelbrot=False,
+    mandelbrot_iter=200,
+    mandelbrot_zoom=1.0,
+    mandelbrot_center=(-0.7, 0.0),
+    mandelbrot_color_offset=0.0,
 ):
     random.seed(seed)
+    if mandelbrot:
+        return draw_mandelbrot(
+            width, height,
+            max_iter=mandelbrot_iter,
+            zoom=mandelbrot_zoom,
+            center=mandelbrot_center,
+            color_offset=mandelbrot_color_offset
+        )
+    # Legacy: shapes/fractal trees
     if gradient and gradient_colors and len(gradient_colors) == 2:
         bg = apply_gradient(width, height, gradient_colors[0], gradient_colors[1])
     else:
@@ -141,7 +187,6 @@ def generate_art(
                 verts.append((vx, vy))
             draw.polygon(verts, fill=fill, outline=outline)
             if stroke and outline and stroke_width > 0:
-                # draw polygon outline manually
                 pts = verts + [verts[0]]
                 draw.line(pts, fill=outline, width=stroke_width)
         elif shape == 'line':
@@ -199,3 +244,4 @@ def generate_animation(
         duration=int(duration * 1000),
         loop=0
     )
+

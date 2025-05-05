@@ -1,8 +1,8 @@
-"""Command-line interface for the Abstract Art Generator."""
+"""Command-line interface for the Abstract Art Generator with Mandelbrot."""
 import math
 import typer
 from typing import List, Optional
-from .generator import generate_art, generate_animation
+from .generator_mandel import generate_art, generate_animation
 from .colors import PALETTES, parse_hex_color
 
 app = typer.Typer(help="Generate abstract art images and animations.")
@@ -40,6 +40,12 @@ def generate(
     frames: int = typer.Option(1, "--frames", help="Number of frames for animation"),
     duration: float = typer.Option(0.1, "--duration", help="Frame duration in seconds"),
     output: str = typer.Option("art.png", "--output", "-o", help="Output filename"),
+    mandelbrot: bool = typer.Option(False, "--mandelbrot", help="Draw colorful Mandelbrot fractal"),
+    mandelbrot_iter: int = typer.Option(200, "--mandelbrot-iter", help="Iterations for Mandelbrot fractal"),
+    mandelbrot_zoom: float = typer.Option(1.0, "--mandelbrot-zoom", help="Mandelbrot zoom factor"),
+    mandelbrot_cx: float = typer.Option(-0.7, "--mandelbrot-cx", help="Mandelbrot real center"),
+    mandelbrot_cy: float = typer.Option(0.0, "--mandelbrot-cy", help="Mandelbrot imaginary center"),
+    mandelbrot_color_offset: float = typer.Option(0.0, "--mandelbrot-color-offset", help="Mandelbrot color cycling offset"),
 ):
     """Generate a static image or animation."""
     bg_color = parse_hex_color(background_color)
@@ -77,6 +83,11 @@ def generate(
         "fractal_scale": fractal_scale,
         "fractal_width": fractal_width,
         "fractal_color": fractal_col,
+        "mandelbrot": mandelbrot,
+        "mandelbrot_iter": mandelbrot_iter,
+        "mandelbrot_zoom": mandelbrot_zoom,
+        "mandelbrot_center": (mandelbrot_cx, mandelbrot_cy),
+        "mandelbrot_color_offset": mandelbrot_color_offset,
     }
     if frames > 1:
         generate_animation(output, frames=frames, duration=duration, **art_kwargs)
@@ -91,3 +102,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
