@@ -42,7 +42,7 @@ def draw_fractal_tree(draw, x1, y1, length, angle, depth, branch_angle, scale, w
     draw_fractal_tree(draw, x2, y2, new_length, angle + branch_angle, depth - 1, branch_angle, scale, width, color)
 
 # --- Artistic Mandelbrot Drawing ---
-def draw_mandelbrot(width, height, max_iter=200, zoom=1.0, center=(-0.7,0.0), color_offset=0.0):
+def draw_mandelbrot(width, height, max_iter=200, zoom=1.0, center=(-0.7,0.0), color_offset=0.0, palette=None):
     img = Image.new('RGB', (width, height))
     pix = img.load()
     scale = 1.5 / zoom
@@ -64,11 +64,16 @@ def draw_mandelbrot(width, height, max_iter=200, zoom=1.0, center=(-0.7,0.0), co
                 color = (0, 0, 0)
             else:
                 mu = it - math.log2(math.log(abs(z) + 1e-10)) + color_offset
-                hue = (0.8 * mu / max_iter + color_offset) % 1.0
-                sat = 1.0
-                val = 1.0 if it < max_iter else 0
-                r, g, b = [int(255 * v) for v in colorsys.hsv_to_rgb(hue, sat, val)]
-                color = (r, g, b)
+                if palette:
+                    idx = int(mu / max_iter * (len(palette) - 1))
+                    idx = max(0, min(idx, len(palette) - 1))
+                    color = palette[idx]
+                else:
+                    hue = (0.8 * mu / max_iter + color_offset) % 1.0
+                    sat = 1.0
+                    val = 1.0 if it < max_iter else 0
+                    r, g, b = [int(255 * v) for v in colorsys.hsv_to_rgb(hue, sat, val)]
+                    color = (r, g, b)
             pix[x, y] = color
     return img
 
@@ -109,12 +114,18 @@ def generate_art(
 ):
     random.seed(seed)
     if mandelbrot:
+        # Determine palette for mandelbrot
+        if custom_palette:
+            pal = [parse_hex_color(c) for c in custom_palette]
+        else:
+            pal = PALETTES.get(palette_name)
         return draw_mandelbrot(
             width, height,
             max_iter=mandelbrot_iter,
             zoom=mandelbrot_zoom,
             center=mandelbrot_center,
-            color_offset=mandelbrot_color_offset
+            color_offset=mandelbrot_color_offset,
+            palette=pal
         )
     # Legacy: shapes/fractal trees
     if gradient and gradient_colors and len(gradient_colors) == 2:

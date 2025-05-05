@@ -2,7 +2,7 @@
 import math
 import typer
 from typing import List, Optional
-from .generator_mandel import generate_art, generate_animation
+from .generator import generate_art, generate_animation
 from .colors import PALETTES, parse_hex_color
 
 app = typer.Typer(help="Generate abstract art images and animations.")
